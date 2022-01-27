@@ -12,26 +12,26 @@ make kvm-hello-world
 
 - (a.1) What is the size of the guest (physical) memory? How and where in the code does the hypervisor allocate it? At what host (virtual) address is this memory mapped?
 
-    - 0x200000 == 2097152 == pow(2,21) == 2 MB bytes of memory is allocated as the RAM for the guest. print in kvm-hello-world.c line 109. (in function `vm_init`)
-    - in kvm-hello-world.c line 111, the hypervisor allocate the guest (physical) address:
+    - 0x200000 == 2097152 == pow(2,21) == 2 MB bytes of memory is allocated as the RAM for the guest. print in kvm-hello-world.c line 107. (in function `vm_init`)
+    - in kvm-hello-world.c line 109, the hypervisor allocate the guest (physical) address:
     - `vm->mem = mmap(NULL, mem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);`
-    - The host (virtual) address is this memory mapped print in kvm-hello-world.c line 115. (in function `vm_init`)
+    - The host (virtual) address is this memory mapped print in kvm-hello-world.c line 113. (in function `vm_init`)
 
 - (a.2) Besides the guest memory, what additional memory is allocated? What is stored in that memory? Where in the code is this memory allocated? At what host/guest? (virtual/physical?) address is it located?
     
     -  The additional allocated memory is vCPU. vCPU is the abbreviation for virtual centralized processing unit. vCPU represents a portion or share of the underlying, physical CPU that is assigned to a particular VM.
     - memory allocated in the host as a virtual address:
-    - `vcpu->kvm_run = mmap(NULL, vcpu_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, vcpu->fd, 0);` in kvm-hello-world.c line 163 (in function `vcpu_init`)
-    - Print the virtual address in kvm-hello-world.c line 169. (in function `vcpu_init`)
+    - `vcpu->kvm_run = mmap(NULL, vcpu_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, vcpu->fd, 0);` in kvm-hello-world.c line 154 (in function `vcpu_init`)
+    - Print the virtual address in kvm-hello-world.c line 157. (in function `vcpu_init`)
 
 The hypervisor then formats the guest memory and registers, to prepare for its
 execution. (From here on, assume _"long"_ mode).
 
 - (a.3) The guest memory area is setup to contain the guest code, the guest page table, and a stack. For each of these, identify where in the code it is setup, and the address range it occupies (both guest-physical and host-virtual).
 
-    - The guest memory area is setup `memreg.guest_phys_addr = 0`. in kvm-hello-world.c line 131
-    - Kernel stack is setup `regs.rsp = 2 << 20`; in kvm-hello-world.c line 545 
-    - Print the range (both guest-physical and host-virtual) in kvm-hello-world.c line 501-505 (in function `setup_long_mode`).
+    - The guest memory area is setup `memreg.guest_phys_addr = 0`. in kvm-hello-world.c line 123
+    - Kernel stack is setup `regs.rsp = 2 << 20`; in kvm-hello-world.c line 535 
+    - Print the range (both guest-physical and host-virtual) in kvm-hello-world.c line 493-497 (in function `setup_long_mode`).
 
 - (a.4) Examine the guest page table. How many levels does it have? How many pages does it occupy? Describe the guest virtual-to-physical mappings: what part(s) of the guest virtual address space is mapped, and to where?
 
@@ -49,8 +49,8 @@ text form).
 
 - (a.5) At what (guest virtual) address does the guest start execution? Where is this address configured?
 
-    - The guest virtual address start execution in `memreg.guest_phys_addr = 0` (in kvm-hello-world.c line 131 (in function `vm_init`))
-    - this config `regs.rip = 0` in in kvm-hello-world.c line 542 in function `run_long_mode`.
+    - The guest virtual address start execution in `memreg.guest_phys_addr = 0` (in kvm-hello-world.c line 123 (in function `vm_init`))
+    - this config `regs.rip = 0` in in kvm-hello-world.c line 532 in function `run_long_mode`.
 
 - (a.6) What port number does the guest use? How can the hypervisor know the port number, and read the value written? Which memory buffer is used for this value? How many exits occur during this print?
 
@@ -73,27 +73,7 @@ In the code.
 
 **(d) Bonus: hypercall in KVM**
 
-KVM already defines several hypercalls, together with a mechanism for guests
-to invoke them (architecture-dependent). For the x86, this is implemented in
-`arch/x86/kvm/x86.c:kvm_emulate_hypercall()`. It is called from code specific
-to Intel/AMD when the guest executes the `VMCALL`/`VMMCALL`, respectively.
-
-Unlike the hypercalls from before, which were passed by KVM to the hypervisor
-process in userspace, these hypercalls invoke functions inside the KVM kernel
-module.
-
-Implement any of the hypercalls from before by extending the KVM kernel module
-(in the function above). You will find sample code how to invoke the hypercall
-from the guest in _arch/x86/include/asm/kvm_para.h_. Notice the definition of
-the macro `KVM_HYPERCALL`, whose purpose is to select the suitable instruction
-(`VMCALL`/`VMMCALL`) depending on the CPU type.
-
-For this, you will need to modify and rebuild the KVM kernel module (but not
-the entire kernel).
-
-The bonus question is optional.
-
-https://david942j.blogspot.com/2018/10/note-learning-kvm-implement-your-own.html
+Not implemant.
 
 **(e) Multiple vCPUs**
 
