@@ -1,0 +1,97 @@
+Lee Azrati id :316223650
+Individual Problems:
+1.
+Attach hw2.c
+2.A
+Each row in /proc/$PID/maps describes a region of contiguous virtual memory in a process or thread. Each row has the following fields:
+address           perms offset  dev   inode   pathname
+08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
+
+•	address - This is the starting and ending address of the region in the process's address space
+•	permissions - This describes how pages in the region can be accessed. There are four different permissions: read, write, execute, and shared. If read/write/execute are disabled, a - will appear instead of the r/w/x. If a region is not shared, it is private, so a p will appear instead of an s. If the process attempts to access memory in a way that is not permitted, a segmentation fault is generated. Permissions can be changed using the mprotect system call.
+•	offset - If the region was mapped from a file (using mmap), this is the offset in the file where the mapping begins. If the memory was not mapped from a file, it's just 0.
+•	device - If the region was mapped from a file, this is the major and minor device number (in hex) where the file lives.
+•	inode - If the region was mapped from a file, this is the file number.
+•	pathname - If the region was mapped from a file, this is the name of the file. This field is blank for anonymous mapped regions. There are also special regions with names like [heap], [stack], or [vdso]..
+		Heap the heap of the program
+		Stack the stack of the main process – the start virtual address
+		[stack:1001]             = the stack of the thread with tid 1001
+		Vdso - virtual dynamic shared object. It's used by system calls to switch to kernel mode.
+		Vvar - the variables used by the vdso
+		Vsyscall -  map system call functions to the user's address space
+
+Example :
+564b41ae9000-564b41b0a000 rw-p 00000000 00:00 0                          [heap]
+7ffc8cd91000-7ffc8cdb2000 rw-p 00000000 00:00 0                          [stack]
+7ffc8cde0000-7ffc8cde3000 r--p 00000000 00:00 0                          [vvar]
+7ffc8cde3000-7ffc8cde4000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+memory mapping is not only used to map files into memory but is also a tool to request RAM from kernel. These are those inode 0 entries - your stack, heap, bss segments and more
+
+Explation of the region:
+
+The binary map to memory:
+564b40658000-564b4065a000 r--p 00000000 08:01 1566                       /usr/bin/cat
+564b4065a000-564b4065f000 r-xp 00002000 08:01 1566                       /usr/bin/cat
+564b4065f000-564b40662000 r--p 00007000 08:01 1566                       /usr/bin/cat
+564b40662000-564b40663000 r--p 00009000 08:01 1566                       /usr/bin/cat
+564b40663000-564b40664000 rw-p 0000a000 08:01 1566                       /usr/bin/cat 
+
+Map without any file relate
+006fb000-00702000 rw-p 00000000 00:00 0
+
+Map library that related to cat command (related to language):
+7fe9926e6000-7fe992718000 r--p 00000000 08:01 5978                       /usr/lib/locale/C.UTF-8/LC_CTYPE
+7fe992718000-7fe992719000 r--p 00000000 08:01 5983                       /usr/lib/locale/C.UTF-8/LC_NUMERIC
+7fe992719000-7fe99271a000 r--p 00000000 08:01 5986                       /usr/lib/locale/C.UTF-8/LC_TIME
+7fe99271a000-7fe99288d000 r--p 00000000 08:01 5977                       /usr/lib/locale/C.UTF-8/LC_COLLATE
+7fe99288d000-7fe99288e000 r--p 00000000 08:01 5981                       /usr/lib/locale/C.UTF-8/LC_MONETARY
+7fe99288e000-7fe99288f000 r--p 00000000 08:01 5975                       /usr/lib/locale/C.UTF-8/LC_MESSAGES/SYS_LC_MESSAGES
+7fe99288f000-7fe992890000 r--p 00000000 08:01 5984                       /usr/lib/locale/C.UTF-8/LC_PAPER
+7fe992890000-7fe992891000 r--p 00000000 08:01 5982                       /usr/lib/locale/C.UTF-8/LC_NAME
+7fe992891000-7fe992892000 r--p 00000000 08:01 5976                       /usr/lib/locale/C.UTF-8/LC_ADDRESS
+7fe992892000-7fe992893000 r--p 00000000 08:01 5985                       /usr/lib/locale/C.UTF-8/LC_TELEPHONE
+7fe992893000-7fe992894000 r--p 00000000 08:01 5980                       /usr/lib/locale/C.UTF-8/LC_MEASUREMENT
+7fe992da1000-7fe992da2000 r--p 00000000 08:01 5979                       /usr/lib/locale/C.UTF-8/LC_IDENTIFICATION
+
+
+Map  library compiled for different architectures
+7fe992b7a000-7fe992b9f000 r--p 00000000 08:01 3447                       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fe992b9f000-7fe992d17000 r-xp 00025000 08:01 3447                       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fe992d17000-7fe992d61000 r--p 0019d000 08:01 3447                       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fe992d61000-7fe992d62000 ---p 001e7000 08:01 3447                       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fe992d62000-7fe992d65000 r--p 001e7000 08:01 3447                       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fe992d65000-7fe992d68000 rw-p 001ea000 08:01 3447                       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fe992d75000-7fe992d76000 r--p 00000000 08:01 3443                       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fe992d76000-7fe992d99000 r-xp 00001000 08:01 3443                       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fe992d99000-7fe992da1000 r--p 00024000 08:01 3443                       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fe992da2000-7fe992da3000 r--p 0002c000 08:01 3443                       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fe992da3000-7fe992da4000 rw-p 0002d000 08:01 3443                       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fe992da4000-7fe992da5000 rw-p 00000000 00:00 0
+
+Map  library form  optimization C library
+7fe992894000-7fe992b7a000 r--p 00000000 08:01 5972                       /usr/lib/locale/locale-archive
+
+2.B
+The different is shared libraries being mapped.
+/usr/lib/x86_64-linux-gnu/lib*
+
+2.C
+The addresses changes in each executions of the command…
+Its happen because is a different running and the mapping of the running allocate new virtual addresses. It same command but different running , and for each running we allocate new virtual addresses and load the needed pages to different addresses.
+
+2.D
+Purpose:
+The vDSO (Virtual Dynamically linked Shared Objects) is a memory area allocated in user space which exposes some kernel functionalities at user space in a safe manner.is an alternative to the somewhat cycle-expensive system call interface that the GNU/Linux kernel provides.
+vDSO hooks are provided via the glibc library.
+ The problems it aims to solve:
+The reason syscalls exist is due to the fact that the Linux kernel is divided into two primary segments of memory: userland and kernel land. Userland is where common programs, including daemons and servers, execute. Kernel land is where the kernel schedules processes and more. This division in memory acts as a safety barrier between user applications and the kernel. The only way a user application even can touch the kernel is via system call communication. Therefore, the robustness and integrity of the kernel is protected by the limited set of routines it provides userland access to, the system calls.
+To accomplish a syscall, the kernel must flip-flop memory contexts: storing the userland CPU registers, looking up the syscall in the interrupt vector of syscalls (the syscall vector is initialized at boot time) and then processing the syscall. Once the syscall has been processed in kernel land, the kernel must restore the registers from the previously stored userland context. Numerous cycles are spun just to make these special kinds of function calls.
+Although this segmentation sounds great for the security world, it does not always provide the most efficient means of communication. Certain functions that do not write any data and merely return a value stored in the kernel, such as gettimeofday(), are relatively safe in nature and provide no threat to the kernel from the requesting userland application.
+This is the reason we use vDSO , to use “simple\save” system call , that not can have security issues , and do this actions quickly. 
+
+Group kernel programming:
+My partner was Adi Cohen (id 208277723), we upload the solution to the git.
+https://github.com/cohennadi/PtreeSyscall  
+branche ex2
