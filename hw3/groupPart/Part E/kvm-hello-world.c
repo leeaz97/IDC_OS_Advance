@@ -142,7 +142,6 @@ void vm_init(struct vm *vm, size_t mem_size , int num_vcpu)
 			perror("KVM_SET_USER_MEMORY_REGION");
 					exit(1);
 		}
-	}
 }
 
 struct vcpu {
@@ -518,13 +517,13 @@ int main(int argc, char **argv)
 
 	switch (mode) {
 	case REAL_MODE:
-		return !run_real_mode(&vm, &vcpu);
+		return !run_real_mode(&vm, &vcpu1);
 
 	case PROTECTED_MODE:
-		return !run_protected_mode(&vm, &vcpu);
+		return !run_protected_mode(&vm, &vcpu1);
 
 	case PAGED_32BIT_MODE:
-		return !run_paged_32bit_mode(&vm, &vcpu);
+		return !run_paged_32bit_mode(&vm, &vcpu1);
 
 	case LONG_MODE:
 		// create thread
