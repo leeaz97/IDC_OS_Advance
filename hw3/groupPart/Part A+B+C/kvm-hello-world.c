@@ -153,8 +153,8 @@ void vcpu_init(struct vm *vm, struct vcpu *vcpu) {
     //               the host OS to store the information it has to exchange with KVM.
     vcpu->kvm_run = mmap(NULL, vcpu_mmap_size, PROT_READ | PROT_WRITE,
                          MAP_SHARED, vcpu->fd, 0);
-    printf("Part A: 'vcpu_mmap_size' = %d\n", vcpu_mmap_size);
-    printf("Part A: VCPU runtime memory location in virutal address space of the hypervisor = %p\n",
+    printf("Part A2: 'vcpu_mmap_size' = %d\n", vcpu_mmap_size);
+    printf("Part A2: VCPU runtime memory location in virutal address space of the hypervisor = %p\n",
                 vcpu->kvm_run);
 
     if (vcpu->kvm_run == MAP_FAILED) {

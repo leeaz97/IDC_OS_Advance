@@ -57,7 +57,7 @@ text form).
     - The port number is `0xE9 = 233`.
     - When the hypervisor run the recognizr the direction is output by the port (that define also in the guest) and then print the value.
     - The memory buffer `p + vcpu->kvm_run->io.data_offset`.
-    - 15 exits occur during "Hello, world!\n".
+    - 14 exits occur during "Hello, world!\n". 15 is printed beacuse we call print() to print the occur 14+1. 
 
 - (a.7) At what guest virtual (and physical?) address is the number 42 written? And how (and where) does the hypervisor read it?
 
