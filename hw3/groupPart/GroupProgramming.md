@@ -65,11 +65,17 @@ text form).
 
 **(b) Extend with new hypercalls**
 
-In the code.
+In the code that found in directory Part A+B+C.
+To run the hypervisor in _"long"_ mode,
+make kvm-hello-world
+./kvm-hellow-world -l
 
 **(c) Filesystem para-virtualization**
 
-In the code.
+In the code that found in directory Part A+B+C.
+To run the hypervisor in _"long"_ mode,
+make kvm-hello-world
+./kvm-hellow-world -l
 
 **(d) Bonus: hypercall in KVM**
 
