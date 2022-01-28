@@ -412,7 +412,7 @@ static void setup_long_mode(struct vm *vm, struct kvm_sregs *sregs, uint64_t bas
 
 	pml4[0] = PDE64_PRESENT | PDE64_RW | PDE64_USER | pdpt_addr;
 	pdpt[0] = PDE64_PRESENT | PDE64_RW | PDE64_USER | pd_addr;
-	pd[0] = PDE64_PRESENT | PDE64_RW | PDE64_USER | PDE64_PS;
+	pd[0] = PDE64_PRESENT | PDE64_RW | PDE64_USER | PDE64_PS | base_vcpu_address;
 
 	sregs->cr3 = pml4_addr;
 	sregs->cr4 = CR4_PAE;
@@ -460,7 +460,7 @@ int run_long_mode(struct vm *vm, struct vcpu *vcpu, uint64_t base_vcpu_address)
 
 // thread that run the long mode
 void * threadFunc(void * arg){
-	struct thread_vcpu *t_vcpu = (struct thread_vcpu *)arg;
+	struct thread_for_vcpu *t_vcpu = (struct thread_for_vcpu *)arg;
 	run_long_mode(t_vcpu->vm, t_vcpu->vcpu, t_vcpu->address);
     return NULL;
 }
@@ -532,12 +532,14 @@ int main(int argc, char **argv)
 		thread_vcpu.address = 0;
 		//run the first vcpu in thread
 		// Create a thread that will function threadFunc()
+		printf("first call to run_long_mode Thread creation\n");
 		int err = pthread_create(&threadId, NULL, &threadFunc, (void *)&thread_vcpu);
 		if (err){
 			printf("Thread creation failed");
 		}
 
-		// run the secound vcpu 
+		// run the secound vcpu
+		printf("secound call to run_long_mode Thread creation\n");
 		return !run_long_mode(&vm, &vcpu2 ,0x200000);
 	}
 
