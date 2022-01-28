@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <uchar.h>
 
-//            Range 225–241 is reserved
 // Port Usage:
 //     0xE9 = 233 = print uint32_t as char32_t orignal kvm-hello-world
 //     0xEB = 235 = print uint32_t as integer
