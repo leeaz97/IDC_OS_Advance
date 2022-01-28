@@ -122,24 +122,23 @@ void vm_init(struct vm *vm, size_t mem_size , int num_vcpu)
 
 	madvise(vm->mem, mem_size, MADV_MERGEABLE);
 
-	// memreg.slot = 0;
-	// memreg.flags = 0;
-	// memreg.guest_phys_addr = 0;
-	// memreg.memory_size = mem_size;
-	// memreg.userspace_addr = (unsigned long)vm->mem;
-    //     if (ioctl(vm->fd, KVM_SET_USER_MEMORY_REGION, &memreg) < 0) {
-	// 	perror("KVM_SET_USER_MEMORY_REGION");
-    //             exit(1);
-	// }
+	memreg.slot = 0;
+	memreg.flags = 0;
+	memreg.guest_phys_addr = 0;
+	memreg.memory_size = mem_size / num_vcpu;
+	memreg.userspace_addr = (unsigned long)vm->mem;
+        if (ioctl(vm->fd, KVM_SET_USER_MEMORY_REGION, &memreg) < 0) {
+		perror("KVM_SET_USER_MEMORY_REGION");
+                exit(1);
+	}
 
 	// allow each guest instance (vCPU) to use half, to protect them from each other.
-	for (i=0; i< num_vcpu; i++) {
-		memreg.slot = i;
-		memreg.flags = 0;
-		memreg.guest_phys_addr = i * (mem_size / num_vcpu);
-		memreg.memory_size = mem_size / num_vcpu;
-		memreg.userspace_addr = (unsigned long)vm->mem + i * (mem_size / num_vcpu);
-			if (ioctl(vm->fd, KVM_SET_USER_MEMORY_REGION, &memreg) < 0) {
+	memreg.slot = 1;
+	memreg.flags = 0;
+	memreg.guest_phys_addr = 1 * (mem_size / num_vcpu);
+	memreg.memory_size = mem_size / num_vcpu;
+	memreg.userspace_addr = (unsigned long)vm->mem + 1 * (mem_size / num_vcpu);
+	    if (ioctl(vm->fd, KVM_SET_USER_MEMORY_REGION, &memreg) < 0) {
 			perror("KVM_SET_USER_MEMORY_REGION");
 					exit(1);
 		}
@@ -425,7 +424,7 @@ static void setup_long_mode(struct vm *vm, struct kvm_sregs *sregs, uint64_t bas
 	setup_64bit_code_segment(sregs);
 }
 
-int run_long_mode(struct vm *vm, struct vcpu *, uint64_t base_vcpu_address)
+int run_long_mode(struct vm *vm, struct vcpu *vcpu, uint64_t base_vcpu_address)
 {
 	struct kvm_sregs sregs;
 	struct kvm_regs regs;
@@ -462,7 +461,7 @@ int run_long_mode(struct vm *vm, struct vcpu *, uint64_t base_vcpu_address)
 
 // thread that run the long mode
 void * threadFunc(void * arg){
-	struct thread_vcpu *t_vcpu = (struct thread_vcpu *)args;
+	struct thread_vcpu *t_vcpu = (struct thread_vcpu *)arg;
 	run_long_mode(t_vcpu->vm, t_vcpu->vcpu, t_vcpu->address);
     return NULL;
 }
@@ -542,6 +541,7 @@ int main(int argc, char **argv)
 		// run the secound vcpu 
 		return !run_long_mode(&vm, &vcpu2 ,0x200000);
 	}
+
 
 	return 1;
 }
