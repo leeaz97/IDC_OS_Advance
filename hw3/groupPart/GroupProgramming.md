@@ -13,19 +13,18 @@ make kvm-hello-world
 - (a.1) What is the size of the guest (physical) memory? How and where in the code does the hypervisor allocate it? At what host (virtual) address is this memory mapped?
 
     - 0x200000 == 2097152 == pow(2,21) == 2 MB bytes of memory is allocated as the RAM for the guest. print in kvm-hello-world.c line 107. (in function `vm_init`)
-    - in kvm-hello-world.c line 109, the hypervisor allocate the guest (physical) address:
+    - in kvm-hello-world.c line 109, the hypervisor allocates ocate the guest (physical) address:
     - `vm->mem = mmap(NULL, mem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);`
     - The host (virtual) address is this memory mapped print in kvm-hello-world.c line 113. (in function `vm_init`)
 
 - (a.2) Besides the guest memory, what additional memory is allocated? What is stored in that memory? Where in the code is this memory allocated? At what host/guest? (virtual/physical?) address is it located?
     
-    -  The additional allocated memory is vCPU. vCPU is the abbreviation for virtual centralized processing unit. vCPU represents a portion or share of the underlying, physical CPU that is assigned to a particular VM.
+    - The additionally allocated memory is vCPU. vCPU is the abbreviation for the virtual centralized processing unit. vCPU represents a portion or share of the underlying, physical CPU that is assigned to a particular VM.
     - memory allocated in the host as a virtual address:
     - `vcpu->kvm_run = mmap(NULL, vcpu_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, vcpu->fd, 0);` in kvm-hello-world.c line 154 (in function `vcpu_init`)
     - Print the virtual address in kvm-hello-world.c line 157. (in function `vcpu_init`)
 
-The hypervisor then formats the guest memory and registers, to prepare for its
-execution. (From here on, assume _"long"_ mode).
+From here on, assume _"long"_ mode.
 
 - (a.3) The guest memory area is setup to contain the guest code, the guest page table, and a stack. For each of these, identify where in the code it is setup, and the address range it occupies (both guest-physical and host-virtual).
 
@@ -40,7 +39,7 @@ execution. (From here on, assume _"long"_ mode).
     - 2. Page Directory Pointer Table (PDPT) - 12 KB == 12288 byte position
     - 3. Page Directory Table (PDT) - 16 KB == 16384 byte position
     - 4. Page Table (PT)
-    - the physical page is found
+    - the physical page is found.
 
 
 For both (a.3) and (a.4), illustrate/visualize the hypervisor memory layout
@@ -55,9 +54,9 @@ text form).
 - (a.6) What port number does the guest use? How can the hypervisor know the port number, and read the value written? Which memory buffer is used for this value? How many exits occur during this print?
 
     - The port number is `0xE9 = 233`.
-    - When the hypervisor run the recognizr the direction is output by the port (that define also in the guest) and then print the value.
+    - When the hypervisor runs recognize the direction is output by the port (that define also in the guest) and then print the value.
     - The memory buffer `p + vcpu->kvm_run->io.data_offset`.
-    - 14 exits occur during "Hello, world!\n". 15 is printed beacuse we call print() to print the occur 14+1. 
+    - 14 exits occur during "Hello, world!\n". 15 is printed because we call print() to print the occur 14+1. 
 
 - (a.7) At what guest virtual (and physical?) address is the number 42 written? And how (and where) does the hypervisor read it?
 
@@ -66,14 +65,16 @@ text form).
 **(b) Extend with new hypercalls**
 
 In the code that found in directory Part A+B+C.
-To run the hypervisor in _"long"_ mode,
+To run in _"long"_ mode:
+
 make kvm-hello-world
 ./kvm-hellow-world -l
 
 **(c) Filesystem para-virtualization**
 
 In the code that found in directory Part A+B+C.
-To run the hypervisor in _"long"_ mode,
+To run in _"long"_ mode:
+
 make kvm-hello-world
 ./kvm-hellow-world -l
 
@@ -83,35 +84,13 @@ Not implemant.
 
 **(e) Multiple vCPUs**
 
-Extend the program _kvm-hello-world.c_ to launch a guest with 2 vCPUs, with
-an instance of the guest running on each vCPU independently and concurrently, 
-including invoking hypercalls. You will need to use another process/thread to
-run the second vCPU. For this setup, double the size of the guest physical
-memory and allow each guest instance (vCPU) to use half, to protect them from
-each other. You will need to provide a distinct guest page table for each of
-the guest instances (in the _"long"_ mode).
+(e.1) + (e.2)
+In the code that found in directory Part E.
+To run in _"long"_ mode:
 
-(e.1) Add code or pseudo-code, to _kvm-hello-world_ and to _guest.c_ that
-implements the necessary changes described above.
-
-(e.2) Bonus: complete your code such that it compiles and works, and test it
-to demonstrate that it operates correctly.
-
-The bonus question is optional.
-
+make kvm-hello-world
+./kvm-hellow-world -l
 ### (2) Containers and namespaces
-
-In this assignment you will implement a simples container runtime that can
-spawn a command in an isolated environment.
-
-For this assignment, you need to understand the basics of Linux namespaces;
-Read through __"Digging into Linux namespaces"__:
-[part 1](https://blog.quarkslab.com/digging-into-linux-namespaces-part-1.html)
-and 
-[part 2](https://blog.quarkslab.com/digging-into-linux-namespaces-part-2.html).
-
-We will use the following steps to build a fully isolated environment for a
-given process:
 
 1. Create user namespace; remap the UIDs/GIDs in the new _userns_
 2. Create uts namespaces; change hostname in the new _utsns_
@@ -182,20 +161,98 @@ These steps can be done in userspace as follows:
          54                                  $ mount -t proc proc /proc
          55                                  $ ps
 
-(a) Describe the process hierarchy produced by the sequence of commands in the
+- (a) Describe the process hierarchy produced by the sequence of commands in the
 "child shell" column. How can it be minimized, and what would the hierarchy
 look like?
+
+   - unshare -U --kill-child /bin/bash 
+   unshare moves the current process inside a new set of namespaces,
+   In this case, create new user namespace (-U) and running bash the paramter --kill-child mean when the parent process dying will kill the child process (bash). 
+   - $ echo "my-user-ns" > /proc/$$/comm
+   /proc/[pid]/comm - This file exposes the process's comm value—that is, the command name associated with the process. 
+   rename the process bash to `my-user-ns`.
+   - $ id
+   Print user and group information for the specified USER, or (when USER omitted) for the current user.
+   print the information of the corrent process bash
+   - $ id - the paret change to the child process (bash) the uid, gid, groups to root. (the parent change the child to root user ) 
+   - $ unshare --ipc --uts --kill-child /bin/bash
+   --ipc - Unshare the IPC namespace. If file is specified, then a persistent namespace is created by a bind mount.
+   --uts - Unshare the UTS namespace. If file is specified, then a persistent namespace is created by a bind mount.
+   In this case, create new IPC and UTS namespace, from the process my-user-ns, running bash and when the parent process (my-user-ns) dying will kill the child process (bash). 
+   - $ hostname isolated - change the name of namespace to isolated
+   - $ hostname - print the hoatname
+   - $ unshare --net --kill-child /bin/bash
+   --net - Unshare the network namespace. If file is specified, then a persistent namespace is created by a bind mount.
+   In this case, create new network namespace from the namespace isolated , running bash and when the parent process (bash) dying will kill the child process (bash). 
+   - $ echo "my-net-ns" > /proc/$$/comm -  rename the process bash to `my-net-ns`.
+   - $ ip link
+   ip link - Show information for all interfaces
+   the loopback interface which is also down.
+   - $ ip link set lo up
+   Change the state of the lo interface to UP.
+   - $ ip link set peer0 up
+   Change the state of the peer0 interface to UP.
+   - $ ip addr add 10.11.12.14/24 dev peer0
+   Add address 10.11.12.14 with netmask 24 to device peer0
+   - $ ping -c 1 10.11.12.13
+   ping to the parent shell for test the communication from child to parent
+   - $ unshare --pid --mount --fork --kill-child /bin/sh
+   --pid - Unshare the PID namespace. If file is specified, then a persistent namespace is created by a bind mount.
+    --fork - Fork the specified program as a child process of unshare rather than running it directly. This is useful when creating a new PID namespace. 
+    The following command creates a PID namespace, using --fork to ensure that the executed command is performed in a child process that (being the first process in the namespace) has PID 1. The --mount-proc option ensures that a new mount namespace is also simultaneously created and that a new proc(5) filesystem is mounted that contains information corresponding to the new PID namespace. And running bash and when the parent process (bash) dying will kill the child process (bash).   
+   - $ mount -t proc proc /proc 
+    Mounting a new procfs inside.
+   - $ ps
+   report a snapshot of the current processes.
+   will report the processes on the corrent namespace.
+
+?????????????
+It can be minimized in child shell:
+   1. unshare -U --ipc --uts --net --pid --mount --fork --kill-child /bin/bash
+   2. ip link set lo up
+   3. ip link set peer0 up
+   4. ip addr add 10.11.12.14/24 dev peer0
+   5. mount -t proc proc /proc
+   6. unshare--mount --fork --kill-child /bin/bash
+   7. ps
+   create 2 namespace and dont 4 namespace but the 2 new namespace will be with same configuration of all the 4.
+?????????????
+
+Hierarchy look like :
+user namespace, child process:my-user-ns(bash) -> 
+isolated (IPC & UTS) namespace, child process:bash -> 
+network namespace, child process:my-net-ns(bash) -> 
+PID namespace, child process:bash.
 
 (b) What would happen if you change the order of namespace creation, e.g. run
 `unshare --ipc` first? And what would happen if you defer lines 12-13 until
 a later time?
 
+
 (c) What is the purpose of line 4 and lines 9-10 (and similarly, line 27 and
 lines 29-30)? Why are they needed?
+
+   - We rename the process names inside the namespaces, because we want to recognize the specific process in the parent process to change his uid,gid,groups/ network.
+   in the process parent  run many instances of some pid and bash (as a process name ) ,we want to connect each instance of bash that we create in the namespace to how he presents in the parent, if we rename the process it will rename in the parent, and we can identify the process in the parent.
 
 (d) Describe how to undo and cleanup the commands above. (Note: there is more
 than one way; try to find the minimal way). Make sure there are no resources
 left dangling around.
+
+   - need to exits in each namespace , because the paramter --kill-child when we exits the namespace (kill the child)  its also kill the parent. in some namespace we need to free the resources.
+   In the child shell: 
+   1. `unmount /proc`
+   2. `exit`
+   3. `ip link set lo down`
+   4. `ip link set peer0 down`
+   5. `ip addr del 10.11.12.14/24 dev peer0`
+   6. `exit`
+   7. `exit`
+   In the child shell:
+   1. `sudo ip link set veth0 down`
+   2. `sudo ip addr del 10.11.12.13/24 dev veth0`
+   3. `sudo ip link del veth0 type veth peer name peer0`
+
 
 (d) Write a program that would implement the sequence above, whose usage is:
 
