@@ -208,12 +208,12 @@ look like?
 
 ?????????????
 It can be minimized in child shell:
-   1. unshare -U --ipc --uts --net --pid --mount --fork --kill-child /bin/bash
+   1. unshare -U --ipc --uts --net --pid --kill-child /bin/bash
    2. ip link set lo up
    3. ip link set peer0 up
    4. ip addr add 10.11.12.14/24 dev peer0
    5. mount -t proc proc /proc
-   6. unshare--mount --fork --kill-child /bin/bash
+   6. unshare --mount --fork --kill-child /bin/bash
    7. ps
    create 2 namespace and dont 4 namespace but the 2 new namespace will be with same configuration of all the 4.
 ?????????????
