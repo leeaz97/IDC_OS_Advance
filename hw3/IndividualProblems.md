@@ -50,10 +50,23 @@ Consider a system with QEMU/KVM hypervisor running several guests:
   does it affect the host? Describe in (low-level) detail what happens when
   a guest-userspace process tries to access a guest-swapped page).
 
+  The guest related to his memory as a physical memory he doesn't aware he runs on virtual memory.
+  So when he does swapping he will change the PTE to will be not present - swapped out and give some number that told where the PT in the swap.
+  when the guest tries to access this page he will get PF (on the guest), and handle the PF by going to the page ->  in the PTE entry, this is a page that swaps out and he bring the page from the map of swap.
+  
+  The host not aware of any of these actions.  
+
+
 * (b) What happens when the host runs out of the memory, and swaps out pages
   that are used by the hypervisor? How does it affect the guest? Describe in
   (low-level) details what happens when a guest-userspace process tries to
   access a host-swapped page.
+
+  The host made a swapping to the page (change the PTE to will be not present - swapped out and give some number that told where the PT in the swap).
+  When the guest-userspace tries to access this page (page that swap), the guest gets PF, it is not EPT violation just a page not found, in host-level, not guest level.
+  So the host does a regular process to find the page (the handaling of swap done in the kernel) - in the PTE entry, this is a page that swaps out, and he brings the page from the map of swap and comes back with the page to the guest. 
+  
+  From the perspective of the guest was a little delay to get the page (he don’t aware of the swapping and PF...)
 
 (3) One difference between plain virtualization and nested virtualization is
 that the former can leverage EPT/NPT hardware extensions, while the latter
@@ -61,6 +74,17 @@ cannot do so directly.
 
 * (a) What are the pros and cons of adding another EPT/NPT layer for nested
   virtualization?
+
+  pros:
+    - Guest has full control over its page tables
+    - No VM exits due to (guest) page faults, INVLPG, or CR3 changes (Reduced volume of VM exits)
+    - HW support to notify VMM
+
+  cons:
+    - (N x M) + N + M memory accesses upon TLB miss (many access):
+      N - depth of host page tables
+      M - depth of guest page tables
+      References = (N x M) + N + M
 
 * (b) In the _Turtles Project_, nested virtalization uses "EPT compression"
   to optimize memory virtualization. To some extent, this technique reminds
@@ -73,3 +97,5 @@ learn about processes inside the guest. It was built before the introduction
 of EPT/NPT. How would the use of EPT affect the techniques describes in the
 paper? What changes (if any) would you propose to adapt their system to EPT,
 and how would such changes affect its performance?
+
+
