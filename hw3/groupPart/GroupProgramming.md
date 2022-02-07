@@ -228,6 +228,16 @@ PID namespace, child process:bash.
 `unshare --ipc` first? And what would happen if you defer lines 12-13 until
 a later time?
 
+According to LWN.net - Namespaces in operation, part 6: more on user namespaces: "Creating namespaces other than user namespaces requires the CAP_SYS_ADMIN capability. On the other hand, creating a user namespace requires (since Linux 3.8) no capabilities, and the first process in the namespace gains a full set of capabilities (in the new user namespace). This means that that process can now create any other type of namespace using a second call to clone()." 
+(This information can be gathered from man7 documentation, but it is much more simplified by LWN.net, I have read both sources, but choosing to explain by using the source LWN.net).
+
+First of all, if we change the order of namespace creation we need to make sure to create the other namespaces with the required capabilities (e.g. by calling sudo), otherwise, we will get "unshare failed: Operation not permitted".
+
+Second, if we run the creation of a non-user-namespace (e.g. unshare --ipc) with `sudo`, and after creating the new user namespace, then the mapping of uid\gid in lines 12-13 will not be valid mapping, the user root is left unknown for the child user namespace, since we running under root and mapping ID-outside-ns for 1000 (The user).  
+
+If we defer lines 12-13 until a later time (for instance after line 20), any creation of a new namespace will fail ("Operation not permitted") because the shell has no capabilities inside the new user namespace (as can be seen by running the commands: `id` and `cat /proc/$$/status | egrep 'Cap(Inh|Prm|Eff)'`). 
+The route cause of this problem is at the execve() call that executed the bash shell: when a process with non-zero user IDs performs an execve(), the process's capability sets are cleared. 
+To avoid this problem, it is necessary to create a user ID mapping inside the user namespace before performing the execve(), or in our scenario, before creating new namespaces.
 
 (c) What is the purpose of line 4 and lines 9-10 (and similarly, line 27 and
 lines 29-30)? Why are they needed?
@@ -331,4 +341,13 @@ _setup\_utsns()_ and _setup\_userns()_.
 
 (e) Test your program. Does it require root privileges? If so, then why?
 How can it be changed to not require these privileges?
+
+Yes, it does require root privileges, because some of the functionality requires:
+* superuser- sethostname, 
+* CAP_SETUID capability in its user namespace- setuid.
+* CAP_SETGID capability in its user namespace- setgid
+* CAP_SYS_ADMIN, CAP_SETGID for writing the file setgroups
+* The flags (CLONE_NEWIPC, CLONE_NEWNET, CLONE_NEWUTS, CLONE_NEWPID, CLONE_NEWNS) passed to clone needs CAP_SYS_ADMIN capability.
+
+Theoretically, you can create another isolated environment to run the program, and change the uid/gid mapping in isolate according to the new user namespace uid/gid mapping.
 
