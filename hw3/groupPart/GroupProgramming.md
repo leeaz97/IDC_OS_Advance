@@ -342,3 +342,12 @@ _setup\_utsns()_ and _setup\_userns()_.
 (e) Test your program. Does it require root privileges? If so, then why?
 How can it be changed to not require these privileges?
 
+Yes, it does require root privileges, because some of the functionality requires:
+* superuser- sethostname, 
+* CAP_SETUID capability in its user namespace- setuid.
+* CAP_SETGID capability in its user namespace- setgid
+* CAP_SYS_ADMIN, CAP_SETGID for writing the file setgroups
+* The flags (CLONE_NEWIPC, CLONE_NEWNET, CLONE_NEWUTS, CLONE_NEWPID, CLONE_NEWNS) passed to clone needs CAP_SYS_ADMIN capability.
+
+Theoretically, you can create another isolated environment to run the program, and change the uid/gid mapping in isolate according to the new user namespace uid/gid mapping.
+
