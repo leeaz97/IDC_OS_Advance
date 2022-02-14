@@ -98,4 +98,13 @@ of EPT/NPT. How would the use of EPT affect the techniques describes in the
 paper? What changes (if any) would you propose to adapt their system to EPT,
 and how would such changes affect its performance?
 
+Process Creation - 
+In Antfarm_ project we see CR3 that we don't see before, in shadow page table it happen immediately, get PF when he tries to change him.
+In the nested page table (EPT/NPT), we don't get immediately PF we get him when the process tries to access something, not exists (we get PF when will have a miss-match between the EPT to the thing the process want to do - it get some time..)
+In this case, the performance in EPT/NPT will be less good than Antfarm_ project
 
+Process Termination - 
+In Antfarm project, if we recognize the CR3 is clean (CR3 = 0 ) in the user space  + invalidate to Page table or we don't see the process a lot of time we can infer that the process terminated.
+In EPT/NPT:
+If we don't see specific address spaces for a long time we can infer that the process associated with the address space terminated.
+In this case, the performance in EPT/NPT will be better than Antfarm_ project (in the table in slide 15 on lacture 10 we can seee the performance for process terminate is not good)
